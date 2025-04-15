@@ -1,0 +1,10 @@
+opencv-python==4.10.0.84
+torch==2.4.1
+torchvision==0.19.1
+paddlepaddle==2.6.1  # For RT-DETR
+paddleocr==2.8.1     # Advanced OCR (replacing EasyOCR)
+pyttsx3==2.90
+numpy==1.26.4
+pyyaml==6.0.2
+pytest==8.3.2
+loguru==0.7.2
