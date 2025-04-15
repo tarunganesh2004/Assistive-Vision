@@ -1,0 +1,16 @@
+camera:
+  source: 0
+  width: 640
+  height: 480
+detector:
+  conf_threshold: 0.5
+ocr:
+  lang: en
+distance:
+  known_width: 0.07  # Bottle width in meters
+  focal_length: 1000  # Calibrate
+tts:
+  rate: 150
+  volume: 0.9
+pipeline:
+  frame_skip_ocr: 10

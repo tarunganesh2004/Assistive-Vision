@@ -1,20 +1,36 @@
 import paddle
-from paddle.vision.models import rt_detr_l
+from ppdet.core.workspace import load_config, create
+from ppdet.engine import Trainer
 from loguru import logger
 import cv2
 import numpy as np
 
 
 class Detector:
-    def __init__(self, model_path="rt_detr_l.pdparams", conf_threshold=0.5):
+    def __init__(
+        self, model_config="rt_detr_l.yml", weights="rt_detr_l_coco", conf_threshold=0.5
+    ):
         self.conf_threshold = conf_threshold
-        self.model = rt_detr_l(pretrained=True)
-        self.model.eval()
-        self.classes = self._load_coco_classes()  # COCO 80 classes
+        self.model = self._load_model(model_config, weights)
+        self.classes = self._load_coco_classes()
         logger.info("RT-DETR model loaded")
 
+    def _load_model(self, model_config, weights):
+        try:
+            # Load RT-DETR config
+            cfg = load_config(f"ppdet/configs/rtdetr/{model_config}")
+            cfg["weights"] = weights
+            cfg["architecture"] = "RTDETR"
+            # Create model
+            model = create("model", cfg)
+            model.eval()
+            return model
+        except Exception as e:
+            logger.exception(f"Model load error: {e}")
+            raise
+
     def _load_coco_classes(self):
-        # Simplified COCO classes (full list in production)
+        # COCO 80 classes (simplified for example)
         return {
             i: name
             for i, name in enumerate(
@@ -24,6 +40,11 @@ class Detector:
                     "chair",
                     "book",
                     "bottle",  # Add more as needed
+                    "cup",
+                    "table",
+                    "door",
+                    "window",
+                    "sign",
                 ]
             )
         }
@@ -38,12 +59,14 @@ class Detector:
 
             # Inference
             with paddle.no_grad():
-                outputs = self.model(paddle.to_tensor(img))
+                outputs = self.model.predict([img])[0]
+                boxes = outputs["bbox"]
+                scores = outputs["bbox_score"]
+                labels = outputs["bbox_label"]
 
             # Post-process
-            boxes, scores, labels = outputs
             detections = []
-            for box, score, label in zip(boxes.numpy(), scores.numpy(), labels.numpy()):
+            for box, score, label in zip(boxes, scores, labels):
                 if score > self.conf_threshold:
                     x1, y1, x2, y2 = box.astype(int)
                     label = int(label)
