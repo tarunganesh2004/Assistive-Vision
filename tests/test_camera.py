@@ -8,3 +8,5 @@ def test_camera_init():
     cam.start()
     assert cam.cap.isOpened()
     cam.release()
+
+
